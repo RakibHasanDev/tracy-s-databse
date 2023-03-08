@@ -23,9 +23,12 @@ console.log(uri)
 
 const usersCollection = client.db('cottageHomeCareServices').collection('users');
 const messageCollection = client.db('cottageHomeCareServices').collection('messages');
+const officeMessageCollection = client.db('cottageHomeCareServices').collection('officeMessages');
 
 async function run(){
 try{
+
+    //user section
 
     app.post('/users', async (req, res) => {
         const user = req.body;
@@ -33,6 +36,7 @@ try{
         const result = await usersCollection.insertOne(user);
         res.send(result);
     });
+
 
     app.put('/users', async (req, res) => {
         const email = req.body.email;
@@ -45,7 +49,7 @@ try{
                 name: data.name,
                 email: data.email,
                 role: data.role,
-                photoUrl: data.photoUrl,
+                photoURL: data.photoURL,
                 verify: data.verify
             }
         };
@@ -54,6 +58,20 @@ try{
         // console.log(email)
         // console.log(data)
     });
+
+    app.get ('/users',async(Req,res)=>{
+        
+        const query = {};
+        const messages = await usersCollection.find(query).toArray();
+        res.send(messages);
+        
+
+
+    })
+
+
+    //message section
+
     app.put('/messages', async (req, res) => {
         const email = req.body.email;
         const data = req.body;
@@ -74,16 +92,7 @@ try{
         };
         const result = await messageCollection.updateOne(query, updateDoc, options);
         res.send(result)
-        // console.log(email)
-        // console.log(data)
-    });
-    
-
-    app.get('/users/admin/:email', async (req, res) => {
-        const email = req.params.email;
-        const query = { email }
-        const user = await usersCollection.findOne(query);
-        res.send({ isAdmin: user?.role === 'Admin' });
+       
     });
 
     app.get('/allmessages/:service', async (req, res) => {
@@ -98,6 +107,48 @@ try{
         const messages = await messageCollection.find(query).toArray();
         res.send(messages);
     });
+
+
+    
+
+    //admin section
+
+    app.get('/users/admin/:email', async (req, res) => {
+        const email = req.params.email;
+        const query = { email }
+        const user = await usersCollection.findOne(query);
+        res.send({ isAdmin: user?.role === 'Admin' });
+    });
+
+    
+    //officeMessage
+
+    app.post('/officeMessages', async (req, res) => {
+        const userMessage = req.body;
+        // console.log(userMessage);
+        const result = await officeMessageCollection.insertOne(userMessage);
+        res.send(result);
+    });
+
+
+    //differentOffice 
+
+    app.get('/office/:name', async (req, res) => {
+        const office = req.params.name;
+        const query = { officeName: office }
+        const data = officeMessageCollection.find(query)
+        const result = await data.toArray()
+        // console.log(category)
+        res.send(result)
+    });
+
+
+    //notification
+    
+
+
+   
+  
    
 
 
