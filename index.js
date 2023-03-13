@@ -62,8 +62,8 @@ try{
     app.get ('/users',async(Req,res)=>{
         
         const query = {};
-        const messages = await usersCollection.find(query).toArray();
-        res.send(messages);
+        const users = await usersCollection.find(query).toArray();
+        res.send(users);
         
 
 
@@ -143,7 +143,32 @@ try{
     });
 
 
+
     //notification
+
+  app.get('/notifications', async(req,res)=>{
+
+    const query = {};
+    const messages = await messageCollection.find(query).toArray();
+
+    const query2 = {};
+    const users = await usersCollection.find(query2).toArray();
+
+    const query3 = {};
+    const officeMessages =await officeMessageCollection.find(query3).toArray();
+
+    const data = {
+        users,
+        messages,
+        officeMessages
+   
+    }
+
+    res.send(data)
+
+
+
+  })  
     
 
 
