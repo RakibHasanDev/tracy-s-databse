@@ -24,6 +24,7 @@ console.log(uri)
 const usersCollection = client.db('cottageHomeCareServices').collection('users');
 const messageCollection = client.db('cottageHomeCareServices').collection('messages');
 const officeMessageCollection = client.db('cottageHomeCareServices').collection('officeMessages');
+const brooklynMessageCollection = client.db('cottageHomeCareServices').collection('brooklynMessages');
 
 async function run(){
 try{
@@ -142,6 +143,15 @@ try{
         res.send(result)
     });
 
+    //Brooklyn Institute Message
+
+    app.post('/brooklyn', async (req, res) => {
+        const brooklynMessage = req.body;
+        // console.log(user);
+        const result = await brooklynMessageCollection.insertOne(brooklynMessage);
+        res.send(result);
+    });
+
 
 
     //notification
@@ -157,10 +167,16 @@ try{
     const query3 = {};
     const officeMessages =await officeMessageCollection.find(query3).toArray();
 
+    const query4 ={};
+    const brooklynMessages = await brooklynMessageCollection.find(query4).toArray();
+
+
+
     const data = {
         users,
         messages,
-        officeMessages
+        officeMessages,
+        brooklynMessages
    
     }
 
