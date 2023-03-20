@@ -2,17 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
-
-
-
-const port = process.env.PORT || 5000;
 const app = express();
+const port = process.env.PORT || 5000;
 
-// console.log(process.env.STRIPE_SECRET_KEY)
-
-// middleware
+//middle wares
 app.use(cors());
-app.use(express.json());
+app.use(express.json())
 
 
 
@@ -25,6 +20,7 @@ const usersCollection = client.db('cottageHomeCareServices').collection('users')
 const messageCollection = client.db('cottageHomeCareServices').collection('messages');
 const officeMessageCollection = client.db('cottageHomeCareServices').collection('officeMessages');
 const brooklynMessageCollection = client.db('cottageHomeCareServices').collection('brooklynMessages');
+const blogCollection = client.db('cottageHomeCareServices').collection('blogs');
 
 async function run(){
 try{
@@ -60,6 +56,15 @@ try{
         // console.log(data)
     });
 
+    app.get ('/users',async(Req,res)=>{
+        
+        const query = {};
+        const users = await usersCollection.find(query).toArray();
+        res.send(users);
+        
+
+
+    })
     app.get ('/users',async(Req,res)=>{
         
         const query = {};
@@ -131,6 +136,15 @@ try{
         res.send(result);
     });
 
+    app.get('/officeMessages', async (req, res) => {
+        
+        // console.log(userMessage);
+        const query = {}
+        const data= await officeMessageCollection.find(query).toArray();
+        
+        res.send(data);
+    });
+
 
     //differentOffice 
 
@@ -151,8 +165,29 @@ try{
         const result = await brooklynMessageCollection.insertOne(brooklynMessage);
         res.send(result);
     });
+    app.get('/brooklyn', async (req, res) => {
+        const query= {};
+        // console.log(user);
+        const result = await brooklynMessageCollection.find(query).toArray();
+        res.send(result);
+    });
 
-
+    app.get('/blogs', async (req, res) => {
+        const query= {};
+        // console.log(user);
+        const result = await blogCollection.find(query).toArray();
+        res.send(result);
+    });
+    
+    // single Blog
+    
+    app.get("/blogs/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const blog = await blogCollection.findOne(query);
+        res.send(blog);
+        // console.log(id)
+    });
 
     //notification
 
@@ -186,6 +221,10 @@ try{
 
   })  
     
+
+
+ 
+
 
 
    
