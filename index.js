@@ -181,15 +181,13 @@ try{
     
     // single Blog
     
-    app.get("/blogs/:id", async (req, res) => {
+    app.get('/blogs/:id', async (req, res) => {
         const id = req.params.id;
-        const query = { _id: ObjectId(id) };
+        const query = { _id: new ObjectId(id) };
         const blog = await blogCollection.findOne(query);
         res.send(blog);
-        // console.log(id)
+        
     });
-
-    //notification
 
   app.get('/notifications', async(req,res)=>{
 
