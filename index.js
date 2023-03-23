@@ -21,6 +21,8 @@ const messageCollection = client.db('cottageHomeCareServices').collection('messa
 const officeMessageCollection = client.db('cottageHomeCareServices').collection('officeMessages');
 const brooklynMessageCollection = client.db('cottageHomeCareServices').collection('brooklynMessages');
 const blogCollection = client.db('cottageHomeCareServices').collection('blogs');
+const commentsCollection = client.db('cottageHomeCareServices').collection('comments');
+
 
 async function run(){
 try{
@@ -188,6 +190,25 @@ try{
         res.send(blog);
         
     });
+
+    // comment 
+    app.post('/comments', async (req, res) => {
+        const comment = req.body;
+        // console.log(userMessage);
+        const result = await commentsCollection.insertOne(comment);
+        res.send(result);
+
+    })
+    app.get('/comments/:id', async (req, res) => {
+        const commentId = req.params.id;
+        const query = { id: commentId }
+        const data = commentsCollection.find(query)
+        const result = await data.toArray()
+        // console.log(category)
+        res.send(result)
+    })
+
+
 
   app.get('/notifications', async(req,res)=>{
 
