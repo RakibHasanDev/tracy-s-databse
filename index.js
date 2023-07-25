@@ -48,6 +48,9 @@ const chatCollection = client.db("cottageHomeCareServices").collection("chats");
 const countCollection = client
   .db("cottageHomeCareServices")
   .collection("count");
+const visitors = client
+  .db("cottageHomeCareServices")
+  .collection("visitors");
 
 async function run() {
   try {
@@ -191,14 +194,9 @@ async function run() {
       // Save the updated document back to the database
       res.send(result);
     });
-
+    
     //active
     app.get("/activeUsers/:active", async (req, res) => {
-      // const query = {};
-      // // console.log(user);
-      // const result = await usersCollection.find(query).toArray();
-      // res.send(result);
-
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
       // console.log(page,size)
@@ -253,14 +251,15 @@ async function run() {
     //time update
 
     app.put('/users/time',  async (req, res) => {
-        const id = req.body.id;
+        const email= req.body.email;
         const data = req.body
-        const filter = { _id: new ObjectId(id) }
+        const filter = { email: email }
         const options = { upsert: true };
         const updatedDoc = {
             $set: {
                 time: data.date,
-                message: data.message
+                message: data.message,
+                adminMessage : data.adminMessage
             }
         }
         const result = await usersCollection.updateOne(filter, updatedDoc, options);
@@ -393,6 +392,7 @@ async function run() {
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
+    
     // delete option in users
     app.delete("/allUsers/:email", async (req, res) => {
       const email = req.params.email;
@@ -417,6 +417,7 @@ async function run() {
       res.send(result);
     });
 
+
     //count post
     app.post("/count", async (req, res) => {
       const count = req.body;
@@ -431,6 +432,62 @@ async function run() {
     // })
 
     //blog section
+
+    //new count api
+
+    app.post("/newCount", async(req,res)=>{
+      const timestamp = new Date();
+      const newData = req.body;
+      const data = {
+        timestamp,
+        count:newData.count
+
+      }
+      const result = await visitors.insertOne(data);
+      res.send(result)
+
+    })
+    
+    app.get('/dailyVisitors', async (req, res) => {
+    
+        const dailyVisitors =  visitors.aggregate([
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+              count: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              date: "$_id",
+              count: 1,
+            },
+          },
+        ]);
+    
+        res.json(dailyVisitors);
+      
+    });
+
+    // app.get("/newCount", async(req,res)=>{
+
+    //   const pipeline = [
+    //     {
+    //       $group: {
+    //         _id: {
+    //           year: { $year: "$date" },
+    //           month: { $month: "$date" },
+    //           day: { $dayOfMonth: "$date" }
+    //         },
+    //         visitorsCount: { $sum: 1 }
+    //       }
+    //     }
+    //   ];
+    //   const result = await visitors.aggregate(pipeline).toArray();
+    //   res.send(result)
+
+    // })
 
     app.get("/blogs", async (req, res) => {
       const query = {};
@@ -590,6 +647,7 @@ async function run() {
       const result = await commentsCollection.insertOne(comment);
       res.send(result);
     });
+    
     app.get("/comments/:id", async (req, res) => {
       const commentId = req.params.id;
       const query = { id: commentId };
