@@ -436,58 +436,53 @@ async function run() {
     //new count api
 
     app.post("/newCount", async(req,res)=>{
-      const timestamp = new Date();
-      const newData = req.body;
+      const rawData = req.body;
+      const today = new Date();
+      const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const data = {
-        timestamp,
-        count:newData.count
+        timestamp: todayDateOnly,
+        count:rawData.count
 
       }
       const result = await visitors.insertOne(data);
       res.send(result)
 
     })
-    
-    app.get('/dailyVisitors', async (req, res) => {
-    
-        const dailyVisitors =  visitors.aggregate([
+
+
+    app.get("/newCount", async(req,res)=>{
+
+      const allVisitors = await visitors.aggregate(
+        [
           {
             $group: {
-              _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
-              count: { $sum: 1 },
-            },
+              _id: {
+                year: { $year: "$timestamp" },
+                month: { $month: "$timestamp" },
+                day: { $dayOfMonth: "$timestamp" }
+              },
+              count: { $sum: 1 }
+            }
           },
           {
             $project: {
               _id: 0,
-              date: "$_id",
-              count: 1,
-            },
-          },
-        ]);
-    
-        res.json(dailyVisitors);
-      
-    });
+              date: {
+                $dateFromParts: {
+                  year: "$_id.year",
+                  month: "$_id.month",
+                  day: "$_id.day"
+                }
+              },
+              count: 1
+            }
+          }
+           
+            ]).toArray()
 
-    // app.get("/newCount", async(req,res)=>{
+            res.send(allVisitors)
 
-    //   const pipeline = [
-    //     {
-    //       $group: {
-    //         _id: {
-    //           year: { $year: "$date" },
-    //           month: { $month: "$date" },
-    //           day: { $dayOfMonth: "$date" }
-    //         },
-    //         visitorsCount: { $sum: 1 }
-    //       }
-    //     }
-    //   ];
-    //   const result = await visitors.aggregate(pipeline).toArray();
-    //   res.send(result)
-
-    // })
+    })
 
     app.get("/blogs", async (req, res) => {
       const query = {};
