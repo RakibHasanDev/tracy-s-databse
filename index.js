@@ -450,6 +450,8 @@ async function run() {
     })
 
 
+    //daily visitors data count
+
     app.get("/newCount", async(req,res)=>{
 
       const allVisitors = await visitors.aggregate(
@@ -461,8 +463,9 @@ async function run() {
                 month: { $month: "$timestamp" },
                 day: { $dayOfMonth: "$timestamp" }
               },
-              count: { $sum: 1 }
+              visitor: { $sum: 1 },              
             }
+
           },
           {
             $project: {
@@ -473,14 +476,81 @@ async function run() {
                   month: "$_id.month",
                   day: "$_id.day"
                 }
+                
               },
-              count: 1
+             
+              visitor: 1,
+              
             }
+          },
+          {
+            $sort: { date: 1 } // Sort by date in ascending order (1). For descending order, use -1.
           }
            
             ]).toArray()
 
             res.send(allVisitors)
+
+    })
+
+
+    // per month visitors count
+
+    app.get("/monthlyVisitors", async(req,res)=>{
+   
+
+      query = {}
+      const users = (await usersCollection.find(query).toArray()).length
+
+        const previousVisitors = 672
+
+   const monthlyVisitors = await  visitors.aggregate([
+ 
+        {
+          $group: {
+            _id: {
+              month: { $month: '$timestamp' },
+              year: { $year: '$timestamp' },
+            },
+            visitors: {
+              $sum: {
+                $cond: {
+                  if: { $eq: [{ $month: "$timestamp" },7 ] }, // Check if the month is 07
+                  then: { $add: ["$count" , previousVisitors] }, // Add previousVisitors if month is 07
+                  else:"$count" // Otherwise, just use the count field
+                }
+              }
+            }
+            
+            // visitors: { $sum: 1 },
+          
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+                    month: {
+          $dateToString: {
+            format: '%m-%Y',
+            date: { $dateFromParts: { year: '$_id.year', month: '$_id.month', day: 1 } },
+          },
+        },
+            
+            visitors: 1,
+
+             users: { $literal: users }
+                    
+          },
+
+        },
+        {
+          $sort: { year: 1, month: 1 },
+        },
+      ]).toArray()
+
+
+
+      res.send(monthlyVisitors)
 
     })
 
