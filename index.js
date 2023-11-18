@@ -80,6 +80,36 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/products", async (req, res) => {
+      const query = {}
+      const result = await productCollection.find(query).toArray();
+      res.send(result)
+    })
+    app.get("/shoes", async (req, res) => {
+      const query = {category: "shoes"};
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    })
+    app.get("/cloth", async (req, res) => {
+      const query = {category: "cloth"};
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    })
+    app.get("/handBag", async (req, res) => {
+      const query = {category: "handBag"};
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    })
+    app.get("/accessories", async (req, res) => {
+      const query = {category: "accessories"};
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    })
+    app.get("/fragrances", async (req, res) => {
+      const query = {category: "fragrances"};
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    })
 
   } finally {
   }
