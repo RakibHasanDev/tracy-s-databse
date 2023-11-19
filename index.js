@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -34,6 +34,7 @@ const client = new MongoClient(uri, {
 
 const videoCollection = client.db("traceykhan").collection("videos");
 const productCollection = client.db("traceykhan").collection("product");
+const reviewCollection = client.db("traceykhan").collection("review");
 
 async function run() {
   try {
@@ -86,30 +87,68 @@ async function run() {
       res.send(result)
     })
     app.get("/shoes", async (req, res) => {
-      const query = {category: "shoes"};
+      const query = { category: "shoes" };
       const result = await productCollection.find(query).toArray();
       res.send(result);
     })
     app.get("/cloth", async (req, res) => {
-      const query = {category: "cloth"};
+      const query = { category: "cloth" };
       const result = await productCollection.find(query).toArray();
       res.send(result);
     })
     app.get("/handBag", async (req, res) => {
-      const query = {category: "handBag"};
+      const query = { category: "handBag" };
       const result = await productCollection.find(query).toArray();
       res.send(result);
     })
     app.get("/accessories", async (req, res) => {
-      const query = {category: "accessories"};
+      const query = { category: "accessories" };
       const result = await productCollection.find(query).toArray();
       res.send(result);
     })
     app.get("/fragrances", async (req, res) => {
-      const query = {category: "fragrances"};
+      const query = { category: "fragrances" };
       const result = await productCollection.find(query).toArray();
       res.send(result);
     })
+
+    app.get("/products/:_id", async (req, res) => {
+      const id = req.params._id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.findOne(query)
+      res.send(result);
+    })
+
+    app.post('/review', async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review)
+      res.send(result)
+    });
+
+    app.get("/reviews", async (req, res) => {
+      try {
+        const id = req.query.serviceId;
+
+        if (!id) {
+          return res.status(400).json({ error: "Service ID is required in the query parameter." });
+        }
+
+        const query = { serviceId: id };
+        const result = await reviewCollection.find(query).sort({ _id: -1 }).toArray();
+
+        if (result.length === 0) {
+          return res.status(404).json({ error: "No reviews found for the provided service ID." });
+        }
+
+        res.json(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal server error." });
+      }
+
+    });
+
+
 
   } finally {
   }
