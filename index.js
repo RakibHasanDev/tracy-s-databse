@@ -111,6 +111,11 @@ async function run() {
       const result = await productCollection.find(query).toArray();
       res.send(result);
     })
+    app.get("/watches", async (req, res) => {
+      const query = { category: "watches" };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    })
 
     app.get("/products/:_id", async (req, res) => {
       const id = req.params._id;
