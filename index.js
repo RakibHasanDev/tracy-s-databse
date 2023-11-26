@@ -18,9 +18,9 @@ app.use(express.json());
 // const uri = `mongodb+srv://${process.env.USER_KEY}:${process.env.PASSWORD_KEY}@cluster0.yk2lizo.mongodb.net/?retryWrites=true&w=majority`;
 
 
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.h32cfqq.mongodb.net/?retryWrites=true&w=majority`
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.h32cfqq.mongodb.net/?retryWrites=true&w=majority`
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.5jjbyfi.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.5jjbyfi.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -48,10 +48,33 @@ async function run() {
     });
 
     app.get("/videos", async (req, res) => {
+    
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      // console.log(page,size)
       const query = {};
-      const videos = await videoCollection.find(query).toArray();
-      res.send(videos);
+      const cursor = videoCollection.find(query);
+      // .sort({ _id: -1 })
+      const videos = await cursor
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      const count = await videoCollection.estimatedDocumentCount();
+      res.send({ count, videos });
     });
+
+    
+
+    
+
+    app.get("/categories/:_id", async (req, res) => {
+      const id = req.params._id;
+    const query = { _id: new ObjectId(id) };
+    const result = await videoCollection.findOne(query)
+    res.send(result);
+    });
+
+ 
 
     app.put("/users", async (req, res) => {
       const email = req.body.email;
