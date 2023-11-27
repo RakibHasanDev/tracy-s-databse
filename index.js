@@ -9,17 +9,13 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-//my database
 
-// const uri = `mongodb+srv://${process.env.USER_KEY}:${process.env.PASSWORD_KEY}@cluster0.h32cfqq.mongodb.net/?retryWrites=true&w=majority`;
 
-//tracy's database
-
-// const uri = `mongodb+srv://${process.env.USER_KEY}:${process.env.PASSWORD_KEY}@cluster0.yk2lizo.mongodb.net/?retryWrites=true&w=majority`;
-
+// my database
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.h32cfqq.mongodb.net/?retryWrites=true&w=majority`
 
+// razibul database
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.5jjbyfi.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -34,11 +30,68 @@ const client = new MongoClient(uri, {
 
 const videoCollection = client.db("traceykhan").collection("videos");
 const productCollection = client.db("traceykhan").collection("product");
+const usersCollection = client.db("traceykhan").collection("users");
 const reviewCollection = client.db("traceykhan").collection("review");
 
 async function run() {
   try {
     //user section
+
+    app.put("/users", async (req, res) => {
+      const email = req.body.email;
+      const data = req.body;
+      // console.log(data, email)
+      const query = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: data.name,
+          email: data.email,
+          photoURL: data.photoURL,
+          verify: data.verify,
+          chat: data.chat,
+          time:data.time
+        },
+      };
+      const result = await usersCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+      // console.log(email)
+      // console.log(data)
+    });
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      // console.log(user);
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      // const query = {};
+      // // console.log(user);
+      // const result = await usersCollection.find(query).toArray();
+      // res.send(result);
+
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      // console.log(page,size)
+      const query = {};
+      const cursor = usersCollection.find(query).sort({ _id: -1 });
+      const users = await cursor
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      const count = await usersCollection.estimatedDocumentCount();
+      res.send({ count, users });
+    });
+
+
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isAdmin: user?.role === "Admin" });
+    });
 
     app.post("/videos", async (req, res) => {
       const video = req.body;
@@ -64,6 +117,24 @@ async function run() {
     });
 
     
+    app.get("/lastUploaded", async (req, res) => {
+      const query = {}
+      const result = (await videoCollection.find(query).sort({ _id: -1 }).toArray()).slice(0,2);
+      res.send(result)
+    })
+    app.get("/recentVideos", async (req, res) => {
+      const query = {}
+      const result = (await videoCollection.find(query).sort({ _id: -1 }).toArray()).slice(2,6);
+      res.send(result)
+    })
+
+
+    app.delete("/videos/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await videoCollection.deleteOne(query);
+      res.send(result);
+    });
 
     
 
@@ -74,28 +145,39 @@ async function run() {
     res.send(result);
     });
 
- 
+    app.get("/videos/:_id", async (req, res) => {
+      const id = req.params._id;
+    const query = { _id: new ObjectId(id) };
+    const result = await videoCollection.findOne(query)
+    res.send(result);
+    });
 
-    app.put("/users", async (req, res) => {
-      const email = req.body.email;
+    app.put("/videos", async (req, res) => {
+      const id = req.body._id;
       const data = req.body;
-      // console.log(data, email)
-      const query = { email: email };
+
+      // console.log(data)
+
+      const query = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updateDoc = {
         $set: {
-          name: data.name,
-          email: data.email,
-          photoURL: data.photoURL,
-          verify: data.verify,
-          chat: data.chat,
+          title: data.title,
+          date: data.date,
+          newDate: data.newDate,
+          img: data.img,
+          description: data.description,
+          videoUrl:data.videoUrl,
+          type:data.type,
+
         },
       };
       const result = await videoCollection.updateOne(query, updateDoc, options);
       res.send(result);
-      // console.log(email)
-      // console.log(data)
     });
+ 
+
+
 
 
     app.post("/product", async (req, res) => {
