@@ -124,7 +124,8 @@ async function run() {
     })
     app.get("/recentVideos", async (req, res) => {
       const query = {}
-      const result = (await videoCollection.find(query).sort({ _id: -1 }).toArray()).slice(2,6);
+      const result = (await videoCollection.find(query).
+      sort({ _id: -1 }).toArray()).slice(2,6);
       res.send(result)
     })
 
@@ -190,6 +191,13 @@ async function run() {
       const query = {}
       const result = await productCollection.find(query).toArray();
       res.send(result)
+    })
+    
+    app.delete("/product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
+      res.send(result);
     })
     app.get("/shoes", async (req, res) => {
       const query = { category: "shoes" };
